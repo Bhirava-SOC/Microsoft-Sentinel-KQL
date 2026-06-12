@@ -1,0 +1,18 @@
+// Brute Force Detection - Azure AD Sign-In Failures
+// Tactic: Credential Access
+// Technique: T1110 - Brute Force
+
+SigninLogs
+| where ResultType != 0
+| where ResultDescription has "Invalid username or password"
+   or ResultType in ("50126", "50053", "50055", "50056")
+| summarize
+    FailedAttempts = count(),
+    FirstAttempt = min(TimeGenerated),
+    LastAttempt = max(TimeGenerated),
+    IPAddresses = make_set(IPAddress),
+    UserAgents = make_set(UserAgent)
+    by UserPrincipalName, IPAddress
+| where FailedAttempts >= 5
+| extend AttackDurationMinutes = datetime_diff("minute", LastAttempt, FirstAttempt)
+| order by FailedAttempts desc
