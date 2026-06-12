@@ -1,0 +1,12 @@
+SigninLogs
+| where ResultType == 0
+| project UserPrincipalName, TimeGenerated, Location=tostring(LocationDetails.countryOrRegion)
+| sort by UserPrincipalName asc, TimeGenerated asc
+| serialize
+| extend PreviousLocation = prev(Location),
+         PreviousTime = prev(TimeGenerated),
+         PreviousUser = prev(UserPrincipalName)
+| where UserPrincipalName == PreviousUser
+| where Location != PreviousLocation
+| where datetime_diff("hour", TimeGenerated, PreviousTime) < 4
+| project UserPrincipalName, PreviousLocation, Location, PreviousTime, TimeGenerated
