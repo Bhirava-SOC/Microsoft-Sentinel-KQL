@@ -1,0 +1,6 @@
+SigninLogs
+| where AuthenticationRequirement == "multiFactorAuthentication"
+| summarize MFAAttempts=count()
+    by UserPrincipalName, bin(TimeGenerated, 15m)
+| where MFAAttempts > 10
+| order by MFAAttempts desc
